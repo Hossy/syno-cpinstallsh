@@ -6,13 +6,14 @@ Verified on DSM version: DSM 4.0-2228
 PREREQUISITES
 #############
 Synology NAS
-ipkg installed -- see http://forum.synology.com/wiki/index.php/How_to_Install_Bootstrap
+ipkg installed (http://forum.synology.com/wiki/index.php/How_to_Install_Bootstrap)
 
 
 NOTES
 #####
-I have removed the /opt mount that the bootstrap install creates as it prevents the DSM from working
-properly: I have verified that upgrades and volume creation fail with the /opt mount.
+I have removed the /opt mount that the bootstrap install creates as it prevents the
+DSM from working properly: I have verified that upgrades and volume creation fail
+with the /opt mount.
 
 To remove the /opt mount:
 1. umount /opt
@@ -24,8 +25,8 @@ FILES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 fixoptware.sh
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-After a DSM upgrade, the /opt softlink is lost as well as other customizations.  This script
-restores them.
+After a DSM upgrade, the /opt softlink is lost as well as other customizations. 
+This script restores them.
 
 NOTE: This needs to be run first after any DSN upgrade where you've lost /opt.
 
