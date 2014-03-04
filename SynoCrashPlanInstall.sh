@@ -10,8 +10,8 @@ if [ ! -r "$1" ]; then
   exit 2
 fi
 
-if [[ "$PATH" != */opt/bin:/opt/sbin* ]]; then
-  PATH=/opt/bin:/opt/sbin:/opt/crashplan/jre/bin:$PATH
+if [[ "$PATH" != */opt/bin:/opt/sbin:/opt/crashplan/jre/bin* ]]; then
+  export PATH=/opt/bin:/opt/sbin:/opt/crashplan/jre/bin:$PATH
 fi
 
 if [ -d /opt/CrashPlan-install ]; then
@@ -28,11 +28,11 @@ fi
 
 if [ -f /opt/crashplan/install.vars ]; then
   echo 'Setting up for reinstall...'
-  rm /opt/crashplan/install.vars || die 4
+  rm /opt/crashplan/install.vars || exit 4
 fi
 
 echo 'Editing CrashPlan install.sh...'
-sed -i 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/CrashPlan-install/install.sh || die 5
+sed -i 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/CrashPlan-install/install.sh || exit 5
 
 echo 'Use these settings:'
 echo ''
@@ -46,19 +46,25 @@ echo ''
 cd /opt/CrashPlan-install
 ./install.sh
 
+if [ "$?" -ne "0" ]; then
+  echo 'CrashPlan installation failed.  Cannot continue.'
+  exit 6
+fi
+
 echo 'Editing files...'
-sed -i 's/ps -eo /ps /' /opt/crashplan/bin/CrashPlanEngine;sed -i 's/ps -p /ps /' /opt/crashplan/bin/CrashPlanEngine; sed -i "s/ps 'pid,cmd'/ps/" /opt/crashplan/bin/CrashPlanEngine || die 6
-sed -i 's/#!\/bin\/sh/#!\/opt\/bin\/bash/' /usr/syno/etc/rc.d/S99crashplan || die 6
-sed -i 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/crashplan/bin/CrashPlanEngine || die 6
-sed -i 's/	nice /\	\/opt\/bin\/nice /' /opt/crashplan/bin/CrashPlanEngine || die 6
-sed -i 's/SCRIPTNAME=(?!env\\ PATH=\/opt\/bin:\/opt\/sbin:$PATH\\ )/SCRIPTNAME=env\\ PATH=\/opt\/bin:\/opt\/sbin:$PATH\\ /' /usr/syno/etc/rc.d/S99crashplan || die 6
+sed -i 's/ps -eo /ps /' /opt/crashplan/bin/CrashPlanEngine;sed -i 's/ps -p /ps /' /opt/crashplan/bin/CrashPlanEngine; sed -i "s/ps 'pid,cmd'/ps/" /opt/crashplan/bin/CrashPlanEngine || exit 7
+sed -i 's/#!\/bin\/sh/#!\/opt\/bin\/bash/' /usr/syno/etc/rc.d/S99crashplan || exit 7
+sed -i 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/crashplan/bin/CrashPlanEngine || exit 7
+sed -i 's/	nice /\	\/opt\/bin\/nice /' /opt/crashplan/bin/CrashPlanEngine || exit 7
+sed -i 's/SCRIPTNAME=(?!env\\ PATH=\/opt\/bin:\/opt\/sbin:$PATH\\ )/SCRIPTNAME=env\\ PATH=\/opt\/bin:\/opt\/sbin:$PATH\\ /' /usr/syno/etc/rc.d/S99crashplan || exit 7
 
 #Edit for open file count
 sed -i 'N;N;/#############################################################\n/a\
 # Increase open files limit\
 ulimit -n 131072\
 ' /opt/crashplan/bin/CrashPlanEngine
-### -- uncomment if you have additional memory installed -- sed -i '/SRV_JAVA_OPTS/s/ -Xmx512m / -Xmx1536m /g' /opt/crashplan/bin/run.conf
+### -- uncomment if you have additional memory installed --
+#sed -i '/SRV_JAVA_OPTS/s/ -Xmx512m / -Xmx1536m /g' /opt/crashplan/bin/run.conf
 
 echo 'Starting CrashPlan...'
 /usr/syno/etc/rc.d/S99crashplan start
