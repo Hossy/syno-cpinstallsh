@@ -1,6 +1,6 @@
 syno-cpinstallsh 1.0 by Hossy
 
-Verified on DSM version: DSM 4.0-2228
+Verified on DSM version: DSM 4.3-3827
 
 
 PREREQUISITES
@@ -37,15 +37,13 @@ Usage:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 optpath.sh
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-When logging in as root, /etc/profile is not processed and you don't get your PATH
-updated with /opt/bin:/opt/sbin.
-
-This isn't working quite yet for some reason.  I'm still working on it, but running
-just the PATH line at the prompt does what you need.
+When logging in as root, the modifications fixoptware.sh makes to /etc/profile to
+update PATH don't work.  I'm still working on figuring this out.  optpath.sh can
+be used to add /opt/bin:/opt/sbin to your PATH.
 
 Usage:
 
-./optpath.sh
+source optpath.sh
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 SynoCrashPlanInstall.sh:
