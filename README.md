@@ -32,7 +32,7 @@ Files
 After a DSM upgrade, the /opt softlink is lost as well as other customizations. 
 This script restores them.
 
-NOTE: This needs to be run first after any DSN upgrade where you've lost /opt.
+NOTE: This needs to be run first after any DSM upgrade where you've lost /opt.
 
 Usage:
 
@@ -78,13 +78,13 @@ it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
+`syno-cpinstallsh` is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with `syno-cpinstallsh`.  If not, see <http://www.gnu.org/licenses/>.
 
 Change Log
 ----------
