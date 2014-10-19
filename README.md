@@ -1,5 +1,5 @@
-syno-cpinstallsh 1.1 by Hossy
-=============================
+syno-cpinstallsh 1.1 build 2 by Hossy
+=====================================
 
 A CrashPlan installer for Synology NAS.
 
@@ -88,6 +88,9 @@ along with `syno-cpinstallsh`.  If not, see <http://www.gnu.org/licenses/>.
 
 Change Log
 ----------
+### v1.1 build 2 ###
+- Fixed java memory option.
+
 ### v1.1 ###
 
 - Added protection to stop CrashPlan before attempting to install
