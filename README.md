@@ -71,7 +71,7 @@ out: https://github.com/Hossy/win-crashplan-uiswitcher
 
 Copyright
 ---------
-Copyright 2014 Hossy
+Copyright 2012-2014 Hossy
 
 `syno-cpinstallsh` is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
