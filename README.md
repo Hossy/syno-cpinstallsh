@@ -6,13 +6,13 @@ A CrashPlan installer for Synology NAS.
 Verified on DSM version: DSM 4.3-3827 Update 8
 
 
-PREREQUISITES
+Prerequisites
 -------------
 - Synology NAS
 - ipkg installed (http://forum.synology.com/wiki/index.php/How_to_Install_Bootstrap)
 
 
-NOTES
+Notes
 -----
 I have removed the /opt mount that the bootstrap install creates as it prevents the
 DSM from working properly: I have verified that upgrades and volume creation fail
@@ -24,7 +24,7 @@ To remove the /opt mount:
 2. ln -s /volume1/@optware /opt
 
 
-FILES
+Files
 -----
 
 ### fixoptware.sh ###
@@ -63,13 +63,13 @@ Usage:
     ./SynoCrashPlanInstall.sh <CrashPlan-tgz-file>
 
 
-REMOTE MANAGEMENT FROM WINDOWS CLIENT
+Remote Management from Windows Client
 -------------------------------------
 I have created a batch script to make remote management easy from Windows.  Check
 out: https://github.com/Hossy/win-crashplan-uiswitcher
 
 
-COPYRIGHT
+Copyright
 ---------
 Copyright 2014 Hossy
 
