@@ -40,6 +40,7 @@ if [ -x /etc/init.d/crashplan ] && [ -f /opt/crashplan/install.vars ]; then
   if [ "$(/etc/init.d/crashplan status)" != "CrashPlan Engine is stopped." ] && [ "$?" -eq "0" ]; then
     echo 'CrashPlan is not stopped.  Attempting to stop...'
     /etc/init.d/crashplan stop
+	echo 'Waiting 30s for CrashPlan to fully stop...'
 	sleep 30
     if [ "$(/etc/init.d/crashplan status)" != "CrashPlan Engine is stopped." ] && [ "$?" -eq "0" ]; then
       echo 'CrashPlan did not stop.  Cannot install atop a running instance.  Please stop CrashPlan first.'
@@ -135,8 +136,9 @@ ulimit -n 131072\
 
 #Edit java heap size
 #Recheck $javaheap in case someone edited a line they weren't supposed to :)
-if [ -n "$javaheap" ] && ! [[ $javaheap =~ $javaheapre ]]; then
-  sed -i '/SRV_JAVA_OPTS/s/ -Xmx\d+m / -Xmx1536m /g' /opt/crashplan/bin/run.conf
+if [ -n "$javaheap" ] && [[ $javaheap =~ $javaheapre ]]; then
+  echo "Setting java heap size to ${javaheap}m..."
+  perl -pi -e "s/(^SRV_JAVA_OPTS.*) -Xmx\d+m /\1 -Xmx${javaheap}m /g" /opt/crashplan/bin/run.conf || exit 8
 fi
 
 
@@ -154,7 +156,7 @@ echo 'Stopping CrashPlan...'
 /usr/syno/etc/rc.d/S99crashplan.sh stop
 
 echo 'Reconfiguring CrashPlan for remote management...'
-perl -pi -e 's/<serviceHost>127.0.0.1<\/serviceHost>/<serviceHost>0.0.0.0<\/serviceHost>/' /opt/crashplan/conf/my.service.xml || exit 8
+perl -pi -e 's/<serviceHost>127.0.0.1<\/serviceHost>/<serviceHost>0.0.0.0<\/serviceHost>/' /opt/crashplan/conf/my.service.xml || exit 9
 
 
 ### Start CrashPlan
