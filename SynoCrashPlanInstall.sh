@@ -14,9 +14,41 @@ if [[ "$PATH" != */opt/bin:/opt/sbin:/opt/crashplan/jre/bin* ]]; then
   export PATH=/opt/bin:/opt/sbin:/opt/crashplan/jre/bin:$PATH
 fi
 
+if [ -x /etc/init.d/crashplan ] && [ -f /opt/crashplan/install.vars ]; then
+  echo 'Previous CrashPlan installation detected.  Checking state.'
+  if [ "$(/etc/init.d/crashplan status)" != "CrashPlan Engine is stopped." ]; then
+    echo 'CrashPlan is not stopped.  Attempting to stop...'
+    /etc/init.d/crashplan stop
+    if [ "$(/etc/init.d/crashplan status)" != "CrashPlan Engine is stopped." ]; then
+      echo 'CrashPlan did not stop.  Cannot install atop a running instance.  Please stop CrashPlan first.'
+      exit 3
+    fi
+  fi
+fi
+
+if [ -d /opt/crashplan/upgrade ]; then
+  echo "Removing previous version's upgrade files..."
+  rm -r /opt/crashplan/upgrade
+fi
+
 if [ -d /opt/CrashPlan-install ]; then
   echo 'Removing old install files...'
   rm -r /opt/CrashPlan-install
+fi
+
+if [ -L /usr/syno/etc/rc.d/S99crashplan ]; then
+  echo 'Removing rc.d symbolic link...'
+  rm /usr/syno/etc/rc.d/S99crashplan
+fi
+
+if [ -L /usr/syno/etc/rc.d/S99crashplan.sh ]; then
+  echo 'Removing rc.d .sh symbolic link...'
+  rm /usr/syno/etc/rc.d/S99crashplan.sh
+fi
+
+if [ -L /opt/bin/CrashPlanDesktop ]; then
+  echo 'Removing CrashPlanDesktop symbolic link...'
+  rm /opt/bin/CrashPlanDesktop
 fi
 
 tar -xvf $1 -C /opt
@@ -32,11 +64,11 @@ if [ -f /opt/crashplan/install.vars ]; then
 fi
 
 echo 'Editing CrashPlan install.sh...'
-sed -i 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/CrashPlan-install/install.sh || exit 5
+perl -pi -e 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/CrashPlan-install/install.sh || exit 5
 
 echo 'Use these settings:'
 echo ''
-echo -e 'CrashPlan will install to: \e[1;36m/opt/crashplan\e[0m'
+echo -e 'CrashPlan will install to: \e[1;36m/opt\e[0m/crashplan  *** Note: Beginning with CrashPlan 3.6.4, leave off "/crashplan" when entering the path.'
 echo -e 'And put links to binaries in: \e[1;36m/opt/bin\e[0m'
 echo 'And store datas in: /opt/crashplan/manifest'
 echo 'Your init.d dir is: /etc/init.d'
@@ -52,11 +84,16 @@ if [ "$?" -ne "0" ]; then
 fi
 
 echo 'Editing files...'
-sed -i 's/ps -eo /ps /' /opt/crashplan/bin/CrashPlanEngine;sed -i 's/ps -p /ps /' /opt/crashplan/bin/CrashPlanEngine; sed -i "s/ps 'pid,cmd'/ps/" /opt/crashplan/bin/CrashPlanEngine || exit 7
-sed -i 's/#!\/bin\/sh/#!\/opt\/bin\/bash/' /usr/syno/etc/rc.d/S99crashplan || exit 7
-sed -i 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/crashplan/bin/CrashPlanEngine || exit 7
-sed -i 's/	nice /\	\/opt\/bin\/nice /' /opt/crashplan/bin/CrashPlanEngine || exit 7
-sed -i 's/SCRIPTNAME=(?!env\\ PATH=\/opt\/bin:\/opt\/sbin:$PATH\\ )/SCRIPTNAME=env\\ PATH=\/opt\/bin:\/opt\/sbin:$PATH\\ /' /usr/syno/etc/rc.d/S99crashplan || exit 7
+
+#Edit /etc/init.d/crashplan
+#sed -i 's/#!\/bin\/sh/#!\/opt\/bin\/bash/' /usr/syno/etc/rc.d/S99crashplan || exit 7
+mv /usr/syno/etc/rc.d/S99crashplan /usr/syno/etc/rc.d/S99crashplan.sh || exit 7
+perl -pi.bak -e 's/SCRIPTNAME=(?!env\\ PATH=\/opt\/bin:\/opt\/sbin:\${PATH}\\ )/SCRIPTNAME=env\\ PATH=\/opt\/bin:\/opt\/sbin:\${PATH}\\ /' /etc/init.d/crashplan || exit 7
+
+#Edit /opt/crashplan/bin/CrashPlanEngine
+perl -pi.bak -e 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/crashplan/bin/CrashPlanEngine || exit 7
+perl -pi -e "s/ps (?:-eo 'pid,cmd'|-p)( ?)/ps\1/" /opt/crashplan/bin/CrashPlanEngine || exit 7
+perl -pi -e 's/(\s*)nice /\1\/opt\/bin\/nice /' /opt/crashplan/bin/CrashPlanEngine || exit 7
 
 #Edit for open file count
 sed -i 'N;N;/#############################################################\n/a\
@@ -64,25 +101,31 @@ sed -i 'N;N;/#############################################################\n/a\
 ulimit -n 131072\
 ' /opt/crashplan/bin/CrashPlanEngine
 ### -- uncomment if you have additional memory installed --
-#sed -i '/SRV_JAVA_OPTS/s/ -Xmx512m / -Xmx1536m /g' /opt/crashplan/bin/run.conf
+sed -i '/SRV_JAVA_OPTS/s/ -Xmx512m / -Xmx1536m /g' /opt/crashplan/bin/run.conf
 
 echo 'Starting CrashPlan...'
-/usr/syno/etc/rc.d/S99crashplan start
+#/etc/init.d/crashplan start
+/usr/syno/etc/rc.d/S99crashplan.sh start
 
 echo 'Waiting 5s...'
 sleep 5
 
 echo 'Stopping CrashPlan...'
-/usr/syno/etc/rc.d/S99crashplan stop
+#/etc/init.d/crashplan stop
+/usr/syno/etc/rc.d/S99crashplan.sh stop
 
 echo 'Reconfiguring CrashPlan for remote management...'
-sed -i 's/<serviceHost>127.0.0.1<\/serviceHost>/<serviceHost>0.0.0.0<\/serviceHost>/' /opt/crashplan/conf/my.service.xml
+perl -pi -e 's/<serviceHost>127.0.0.1<\/serviceHost>/<serviceHost>0.0.0.0<\/serviceHost>/' /opt/crashplan/conf/my.service.xml
 
 echo 'Starting CrashPlan...'
-nohup /usr/syno/etc/rc.d/S99crashplan start
+/usr/bin/nohup /etc/init.d/crashplan start
+#/usr/bin/nohup /usr/syno/etc/rc.d/S99crashplan.sh start
 
 echo 'Waiting 30s...'
 sleep 30
 
 echo 'Checking ports...'
 netstat -anp | grep ':424.'
+
+echo 'As of DSM 4.3, nohup is not working.  This means once you exit this shell, CrashPlan will close.'
+echo 'You will need to restart your NAS to allow CrashPlan to start outside this shell.'
