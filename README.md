@@ -151,7 +151,8 @@ Change Log
 - Fixed PATH to prevent constant reinstall of java
 - Fixed sed command for S99crashplan to prevent endless PATH entries
 - Added ulimit to increase open files limit
-- Added comment for adjusting java memory allocation (NOTE: Additional RAM required)
+- Added comment for adjusting java memory allocation (NOTE: Additional RAM
+  required)
 - Added PID display to netstat at the end
 
 ### v1.0 ###
