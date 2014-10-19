@@ -117,6 +117,7 @@ Change Log
 ### v1.2 ###
 - Fixed bug in CrashPlan verification where script would not proceed if there was
   an error checking the status
+- Fixed bug for checking if CrashPlan was running if init.d script was broken
 - Changed java heap sed command to be dynamic with CrashPlan updates
 - Changed/Grouped exit codes to make more sense
 - Added java heap option at the top of the script to make it easier to use

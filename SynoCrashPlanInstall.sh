@@ -2,7 +2,7 @@
 
 #Java memory heap override
 #Reference: http://support.code42.com/CrashPlan/Latest/Troubleshooting/CrashPlan_Runs_Out_Of_Memory_And_Crashes
-javaheap=2048
+#javaheap=2048
 
 ###################################################################################
 #########################   DO NOT EDIT BELOW THIS LINE   #########################
