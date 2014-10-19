@@ -85,3 +85,21 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Change Log
+----------
+### v1.1 ###
+
+- Added protection to stop CrashPlan before attempting to install
+- Added removal of CrashPlan upgrade directory before installation (for cleanup)
+- Added removal of CrashPlanDesktop symlink (for cleanup)
+- Added removal of both old and new rc.d symlinks
+  - install.sh will recreate the non .sh one and then this script will rename it
+  - Fixes a bug where the rc.d script and init.d script were actual files and not symlink and file combo
+- Replaced string substitutions with perl commands instead of sed
+  - .bak files are now created
+- Starting and stopping CrashPlan is now done via the init.d script instead of rc.d
+- Misc on-screen instruction updates
+
+### v1.0 ###
+- Initial commit
