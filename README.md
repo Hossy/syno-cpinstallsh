@@ -95,7 +95,8 @@ Change Log
 - Added removal of CrashPlanDesktop symlink (for cleanup)
 - Added removal of both old and new rc.d symlinks
   - install.sh will recreate the non .sh one and then this script will rename it
-  - Fixes a bug where the rc.d script and init.d script were actual files and not symlink and file combo
+  - Fixes a bug where the rc.d script and init.d script were actual files and not
+    symlink and file combo
 - Replaced string substitutions with perl commands instead of sed
   - .bak files are now created
 - Starting and stopping CrashPlan is now done via the init.d script instead of rc.d
