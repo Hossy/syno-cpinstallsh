@@ -9,7 +9,7 @@ Verified on DSM version: DSM 4.3-3827 Update 8
 Prerequisites
 -------------
 - Synology NAS
-- ipkg installed (http://forum.synology.com/wiki/index.php/How_to_Install_Bootstrap)
+- ipkg installed (<http://forum.synology.com/wiki/index.php/How_to_Install_Bootstrap>)
 
 
 Notes
@@ -66,7 +66,7 @@ Usage:
 Remote Management from Windows Client
 -------------------------------------
 I have created a batch script to make remote management easy from Windows.  Check
-out: https://github.com/Hossy/win-crashplan-uiswitcher
+out: <https://github.com/Hossy/win-crashplan-uiswitcher>
 
 
 Copyright
