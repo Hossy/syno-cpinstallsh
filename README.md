@@ -68,9 +68,9 @@ out: https://github.com/Hossy/win-crashplan-uiswitcher
 
 COPYRIGHT
 #########
-Copyright 2014 John Greg Hossbach
+Copyright 2014 @Hossy
 
-`syno-cpinstallsh` is free software: you can redistribute it and/or modify
+syno-cpinstallsh is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
