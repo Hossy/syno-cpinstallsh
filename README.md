@@ -102,5 +102,18 @@ Change Log
 - Starting and stopping CrashPlan is now done via the init.d script instead of rc.d
 - Misc on-screen instruction updates
 
+### v1.0 - Mar 4, 2014 #2 ###
+- Fixed java path logic
+- Replaced die with exit
+- Script now terminates if CrashPlan install fails
+- Cleaned up comments
+
+### v1.0 - Mar 4, 2014 ###
+- Fixed PATH to prevent constant reinstall of java
+- Fixed sed command for S99crashplan to prevent endless PATH entries
+- Added ulimit to increase open files limit
+- Added comment for adjusting java memory allocation (NOTE: Additional RAM required)
+- Added PID display to netstat at the end
+
 ### v1.0 ###
 - Initial commit

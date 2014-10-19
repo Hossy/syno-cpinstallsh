@@ -101,7 +101,7 @@ sed -i 'N;N;/#############################################################\n/a\
 ulimit -n 131072\
 ' /opt/crashplan/bin/CrashPlanEngine
 ### -- uncomment if you have additional memory installed --
-sed -i '/SRV_JAVA_OPTS/s/ -Xmx512m / -Xmx1536m /g' /opt/crashplan/bin/run.conf
+#sed -i '/SRV_JAVA_OPTS/s/ -Xmx512m / -Xmx1536m /g' /opt/crashplan/bin/run.conf
 
 echo 'Starting CrashPlan...'
 #/etc/init.d/crashplan start
