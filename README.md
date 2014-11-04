@@ -10,6 +10,11 @@ Prerequisites
 -------------
 - Synology NAS
 - ipkg installed (<http://forum.synology.com/wiki/index.php/How_to_Install_Bootstrap>)
+- ipkg packages:
+	- bash
+	- coreutils (`who` used by CrashPlan installer)
+	- cpio (used by CrashPlan installer)
+- Perl (install via Synology Package Center)
 
 
 Notes
