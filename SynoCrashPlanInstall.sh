@@ -35,7 +35,7 @@ fi
 
 
 ### Verify CrashPlan is not running
-if [ -x /etc/init.d/crashplan ] && [ -f /opt/crashplan/install.vars ]; then
+if [ -f /opt/crashplan/lib/com.backup42.desktop.jar ] && [ -x /etc/init.d/crashplan ] && [ -f /opt/crashplan/install.vars ]; then
   echo 'Previous CrashPlan installation detected.  Checking state.'
   if [ "$(/etc/init.d/crashplan status)" != "CrashPlan Engine is stopped." ] && [ "$?" -eq "0" ]; then
     echo 'CrashPlan is not stopped.  Attempting to stop...'

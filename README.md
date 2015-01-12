@@ -1,4 +1,4 @@
-syno-cpinstallsh 1.3 by Hossy
+syno-cpinstallsh 1.4 by Hossy
 =====================================
 
 A CrashPlan installer for Synology NAS.
@@ -119,6 +119,9 @@ along with `syno-cpinstallsh`.  If not, see <http://www.gnu.org/licenses/>.
 
 Change Log
 ----------
+### v1.4 ###
+- Fixed bug with CrashPlan run detection after failed auto-upgrade.
+
 ### v1.3 ###
 - Fixed bug with java heap replacement (wasn't working).  Now uses perl instead of sed.
 
