@@ -1,2 +1,5 @@
 #!/opt/bin/bash
-export PATH=/opt/bin:/opt/sbin:$PATH
+# run with 'source' command
+PATH=/opt/sbin:/opt/bin:$PATH
+export PATH
+alias ls='ls --color=auto'

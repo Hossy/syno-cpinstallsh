@@ -2,11 +2,14 @@
 
 #Java memory heap override
 #Reference: http://support.code42.com/CrashPlan/Latest/Troubleshooting/CrashPlan_Runs_Out_Of_Memory_And_Crashes
-#javaheap=2048
+javaheap=4096
 
 ###################################################################################
 #########################   DO NOT EDIT BELOW THIS LINE   #########################
 ###################################################################################
+
+### Constants
+maxhealthchecks=6
 
 ### Validate javaheap variable
 javaheapre='^[0-9]+$'
@@ -61,9 +64,14 @@ if [ -d /opt/crashplan/upgrade ]; then
   rm -r /opt/crashplan/upgrade
 fi
 
-if [ -d /opt/CrashPlan-install ]; then
+if [ -d /opt/crashplan-install ]; then
   echo 'Removing old install files...'
-  rm -r /opt/CrashPlan-install
+  rm -r /opt/crashplan-install
+fi
+
+if [ -L /opt/etc/init.d/S99crashplan ]; then
+  echo 'Removing Optware init.d symbolic link...'
+  rm /opt/etc/init.d/S99crashplan
 fi
 
 if [ -L /usr/syno/etc/rc.d/S99crashplan ]; then
@@ -85,7 +93,7 @@ fi
 ### CrashPlan install
 tar -xvf $1 -C /opt
 
-if [ ! -x /opt/CrashPlan-install/install.sh ]; then
+if [ ! -x /opt/crashplan-install/install.sh ]; then
   echo 'Failed to extract CrashPlan install files.'
   exit 4
 fi
@@ -96,7 +104,8 @@ if [ -f /opt/crashplan/install.vars ]; then
 fi
 
 echo 'Editing CrashPlan install.sh...'
-perl -pi -e 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/CrashPlan-install/install.sh || exit 5
+perl -pi -e 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/crashplan-install/install.sh || exit 5
+perl -pi -e 's/\$WGET_PATH \$JVMURL/\$WGET_PATH --no-check-certificate \$JVMURL/' /opt/crashplan-install/install.sh || exit 5
 
 echo 'Use these settings:'
 echo ''
@@ -104,10 +113,11 @@ echo -e 'CrashPlan will install to: \e[1;36m/opt\e[0m/crashplan  *** Note: Begin
 echo -e 'And put links to binaries in: \e[1;36m/opt/bin\e[0m'
 echo 'And store datas in: /opt/crashplan/manifest'
 echo 'Your init.d dir is: /etc/init.d'
-echo -e 'Your current runlevel directory is: \e[1;36m/usr/syno/etc/rc.d\e[0m'
+#echo -e 'Your current runlevel directory is: \e[1;36m/usr/syno/etc/rc.d\e[0m'
+echo -e 'Your current runlevel directory is: \e[1;36m/opt/etc/init.d\e[0m  *** Note: Requires Optware fix from http://forum.synology.com/enu/viewtopic.php?f=77&t=51025'
 echo ''
 
-cd /opt/CrashPlan-install
+cd /opt/crashplan-install
 ./install.sh
 
 if [ "$?" -ne "0" ]; then
@@ -120,7 +130,7 @@ fi
 echo 'Editing files...'
 
 #Edit /etc/init.d/crashplan
-mv /usr/syno/etc/rc.d/S99crashplan /usr/syno/etc/rc.d/S99crashplan.sh || exit 7
+#mv /usr/syno/etc/rc.d/S99crashplan /usr/syno/etc/rc.d/S99crashplan.sh || exit 7
 perl -pi.bak -e 's/SCRIPTNAME=(?!env\\ PATH=\/opt\/bin:\/opt\/sbin:\${PATH}\\ )/SCRIPTNAME=env\\ PATH=\/opt\/bin:\/opt\/sbin:\${PATH}\\ /' /etc/init.d/crashplan || exit 7
 
 #Edit /opt/crashplan/bin/CrashPlanEngine
@@ -146,32 +156,60 @@ fi
 #Start CrashPlan so it writes my.service.xml, then stop it
 echo 'Starting CrashPlan (for just a moment)...'
 #/etc/init.d/crashplan start
-/usr/syno/etc/rc.d/S99crashplan.sh start
+#/usr/syno/etc/rc.d/S99crashplan.sh start
+/opt/etc/init.d/S99crashplan start
 
-echo 'Waiting 5s...'
+[ ! -f /opt/crashplan/conf/my.service.xml ] && echo 'Waiting for my.service.xml to be created...'
+while [ ! -f /opt/crashplan/conf/my.service.xml ]; do
 sleep 5
+done
 
 echo 'Stopping CrashPlan...'
 #/etc/init.d/crashplan stop
-/usr/syno/etc/rc.d/S99crashplan.sh stop
+#/usr/syno/etc/rc.d/S99crashplan.sh stop
+/opt/etc/init.d/S99crashplan stop
 
 echo 'Reconfiguring CrashPlan for remote management...'
-perl -pi -e 's/<serviceHost>127.0.0.1<\/serviceHost>/<serviceHost>0.0.0.0<\/serviceHost>/' /opt/crashplan/conf/my.service.xml || exit 9
+perl -pi -e 's/<serviceHost>(?:127\.0\.0\.1|localhost)<\/serviceHost>/<serviceHost>0.0.0.0<\/serviceHost>/' /opt/crashplan/conf/my.service.xml || exit 9
 
 
 ### Start CrashPlan
 echo 'Starting CrashPlan (finally)...'
-/usr/bin/nohup /etc/init.d/crashplan start
+#/usr/bin/nohup /etc/init.d/crashplan start
 #/usr/bin/nohup /usr/syno/etc/rc.d/S99crashplan.sh start
+#/usr/bin/nohup /opt/etc/init.d/S99crashplan start
+#screen -mS crashplan $SHELL -c 'echo hi; sleep 3; $SHELL'
+/opt/bin/screen -dmS CrashPlan $SHELL -c '/opt/etc/init.d/S99crashplan start; $SHELL'
 
 
-### Health check (no script confirmation, human only)
-echo 'Waiting 30s...'
-sleep 30
+### Health check
+svcport=$(sed -nre '/^\s*<location>/ s/.*:([0-9]+).*/\1/p' /opt/crashplan/conf/my.service.xml)
+uiport=$(sed -nre '/^\s*<servicePort>/ s/\s*<servicePort>([0-9]+).*/\1/p' /opt/crashplan/conf/my.service.xml)
+echo 'CrashPlan service port:' $svcport
+echo 'CrashPlan UI port:' $uiport
 
-echo 'Checking ports...'
-netstat -anp | grep ':424.'
-echo 'If all worked well, you should see java listening on 0.0.0.0:4242 and 0.0.0.0:4243'
+echo 'Waiting for service to startup...'
+healthcount=0
+netstat -anp | grep -qE ":$svcport |:$uiport "
+while [ $? -gt 0 ]; do
+healthcount=$((healthcount + 1))
+if [ $healthcount -gt $maxhealthchecks ]; then
+	echo 'Exceeded wait time for CrashPlan to start.  Check CrashPlan log files.'
+	break
+fi
+sleep 5
+netstat -anp | grep -qE ":$svcport |:$uiport "
+done
+if [ $? -eq 0 ]; then
+	echo 'CrashPlan has started successfully.'
+	netstat -anp | grep -E ":$svcport |:$uiport "
+	echo ''
+fi
+
+echo 'If all worked well, you should see java listening on 0.0.0.0:'$svcport 'and 0.0.0.0:'$uiport
 echo ''
-echo 'As of DSM 4.3, nohup is not working.  This means once you exit this shell, CrashPlan will close.'
-echo 'You will need to restart your NAS to allow CrashPlan to start outside this shell.'
+echo 'As of CrashPlan 4.3.0, you will need the GUID below (secrity key) to connect to this instance.'
+echo 'If you change the port CrashPlan is listening on, a new GUID will be created.'
+echo 'The GUID is located in: /var/lib/crashplan/.ui_info'
+echo ''
+echo 'CrashPlan .ui_info GUID:' `cat /var/lib/crashplan/.ui_info | awk -F , '{print $2}'`

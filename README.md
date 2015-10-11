@@ -1,20 +1,24 @@
-syno-cpinstallsh 1.4 by Hossy
+syno-cpinstallsh 1.5 by Hossy
 =====================================
 
 A CrashPlan installer for Synology NAS.
 
-Verified on DSM version: DSM 4.3-3827 Update 8
+Verified on DSM version: DSM 5.2-5592 Update 4
 
 
 Prerequisites
 -------------
 - Synology NAS
+- Perl (install via Synology Package Center)
 - ipkg installed (<http://forum.synology.com/wiki/index.php/How_to_Install_Bootstrap>)
 - ipkg packages:
 	- bash
 	- coreutils (`who` used by CrashPlan installer)
 	- cpio (used by CrashPlan installer)
-- Perl (install via Synology Package Center)
+	- screen
+	- wget-ssl (if you are downloading from CrashPlan's site)
+		- remove wget first
+- Optware fix from http://forum.synology.com/enu/viewtopic.php?f=77&t=51025
 
 
 Notes
@@ -26,7 +30,8 @@ with the /opt mount.
 To remove the /opt mount:
 
 1. umount /opt
-2. ln -s /volume1/@optware /opt
+2. rmdir /opt (this should be an empty directory)
+3. ln -s /volume1/@optware /opt
 
 
 Files
@@ -75,10 +80,11 @@ known issue and this script will help you adjust your system, if you have the
 capacity.  In CrashPlan 3.6.3, the default maximum java heap size is 1024MB (it was
 increased in the recent past from 512MB to 1024MB).  However, sometimes that is not
 enough.  If this is the case for you, this script provides a method of updating the
-maximum java heap size by editing this file and uncommenting `#javaheap=2048` in
-the beginning of the file and changing the value to whatever you need.  I have 3GB
-of RAM in my Synology NAS, so I allow CrashPlan to consume up to 2GB.  The value is
-always specified in MB, but please ensure you provide numbers only.
+maximum java heap size by editing this file and uncommenting `#javaheap=4096` in
+the beginning of the file and changing the value to whatever you need.  I have 4GB
+of RAM in my Synology NAS and a very large dataset, so I allow CrashPlan to consume
+up to 4GB.  The value is always specified in MB, but please ensure you provide
+numbers only.
 
 **WARNING:** If you're going to edit the script, please only edit the javaheap line
 at the top.  If you edit the script on Windows, make sure you use an editor like
@@ -86,8 +92,8 @@ Notepad++ (*not* Notepad) that will respect Linux EOL style.
 
 Obviously, you will need to ensure your NAS has the physical memory available.
 Synology recommends you purchase your memory upgrade from them (of course), but you
-don't have to if you know what you're doing (or think you do).  The Synology Wiki
-has a good article on user-reported compatible RAM modules here:
+don't have to if you know what you're doing (or think you do :-) ).  The Synology
+Wiki has a good article on user-reported compatible RAM modules here:
 <http://forum.synology.com/wiki/index.php/User_Reported_Compatible_RAM_modules>.
 
 For more information on Out of Memory issues with CrashPlan, see
@@ -119,11 +125,22 @@ along with `syno-cpinstallsh`.  If not, see <http://www.gnu.org/licenses/>.
 
 Change Log
 ----------
+### v1.5 ###
+- Added requirement for screen since nohup stopped working in DSM 4.3.
+- Changed to using screen instead of nohup.
+- Replaced human health check with automated health check.  This script now
+  verifies CrashPlan starts successfully.
+- Changed to using Optware's init.d instead of Synology's init.d
+- Added fix for CrashPlan's installer failing to download the JVM.
+- Added output of new .ui_info GUID to facilitate remote connections.
+- Fixed logic in `fixoptware.sh`
+
 ### v1.4 ###
 - Fixed bug with CrashPlan run detection after failed auto-upgrade.
 
 ### v1.3 ###
-- Fixed bug with java heap replacement (wasn't working).  Now uses perl instead of sed.
+- Fixed bug with java heap replacement (wasn't working).  Now uses perl instead of
+  sed.
 
 ### v1.2 ###
 - Fixed bug in CrashPlan verification where script would not proceed if there was
