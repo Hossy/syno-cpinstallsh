@@ -1,4 +1,4 @@
-syno-cpinstallsh 1.5 by Hossy
+syno-cpinstallsh 1.5a by Hossy
 =====================================
 
 A CrashPlan installer for Synology NAS.
@@ -125,6 +125,9 @@ along with `syno-cpinstallsh`.  If not, see <http://www.gnu.org/licenses/>.
 
 Change Log
 ----------
+### v1.5a ###
+- Fixed bug with calling ps in narrow terminal
+
 ### v1.5 ###
 - Added requirement for screen since nohup stopped working in DSM 4.3.
 - Changed to using screen instead of nohup.

@@ -2,7 +2,7 @@
 
 #Java memory heap override
 #Reference: http://support.code42.com/CrashPlan/Latest/Troubleshooting/CrashPlan_Runs_Out_Of_Memory_And_Crashes
-javaheap=4096
+#javaheap=4096
 
 ###################################################################################
 #########################   DO NOT EDIT BELOW THIS LINE   #########################
@@ -53,7 +53,7 @@ if [ -f /opt/crashplan/lib/com.backup42.desktop.jar ] && [ -x /etc/init.d/crashp
 fi
 
 #Double-check
-if [ -n "$(/bin/ps| grep 'app=CrashPlanService' | grep -v grep)" ]; then
+if [ -n "$(/bin/ps ww| grep 'app=CrashPlanService' | grep -v grep)" ]; then
   echo 'CrashPlan still appears to be running.  Please stop it manually and try again.'
   exit 3
 fi
@@ -135,7 +135,7 @@ perl -pi.bak -e 's/SCRIPTNAME=(?!env\\ PATH=\/opt\/bin:\/opt\/sbin:\${PATH}\\ )/
 
 #Edit /opt/crashplan/bin/CrashPlanEngine
 perl -pi.bak -e 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/crashplan/bin/CrashPlanEngine || exit 7
-perl -pi -e "s/ps (?:-eo 'pid,cmd'|-p)( ?)/ps\1/" /opt/crashplan/bin/CrashPlanEngine || exit 7
+perl -pi -e "s/ps (?:-eo 'pid,cmd'|-p)( ?)/ps ww\1/" /opt/crashplan/bin/CrashPlanEngine || exit 7
 perl -pi -e 's/(\s*)nice /\1\/opt\/bin\/nice /' /opt/crashplan/bin/CrashPlanEngine || exit 7
 
 #Edit for open file count
