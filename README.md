@@ -1,9 +1,9 @@
-syno-cpinstallsh 1.5a by Hossy
+syno-cpinstallsh 1.6 by Hossy
 =====================================
 
 A CrashPlan installer for Synology NAS.
 
-Verified on DSM version: DSM 5.2-5592 Update 4
+Verified on DSM version: DSM 5.2-5644 Update 5
 
 
 Prerequisites
@@ -16,6 +16,7 @@ Prerequisites
 	- coreutils (`who` used by CrashPlan installer)
 	- cpio (used by CrashPlan installer)
 	- screen
+	- sed (used by CrashPlan installer)
 	- wget-ssl (if you are downloading from CrashPlan's site)
 		- remove wget first
 - Optware fix from http://forum.synology.com/enu/viewtopic.php?f=77&t=51025
@@ -125,6 +126,11 @@ along with `syno-cpinstallsh`.  If not, see <http://www.gnu.org/licenses/>.
 
 Change Log
 ----------
+### v1.6 ###
+- Added ipkg package validation
+- Added sed handling for CrashPlan installer
+- Improved CrashPlan running logic
+
 ### v1.5a ###
 - Fixed bug with calling ps in narrow terminal
 

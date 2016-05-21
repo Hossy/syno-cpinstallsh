@@ -37,15 +37,29 @@ if [[ "$PATH" != */opt/bin:/opt/sbin:/opt/crashplan/jre/bin* ]]; then
 fi
 
 
+### Validate ipkg installation
+VALID=1
+REQDIPKGS='bash coreutils cpio screen sed wget-ssl'
+for PKG in $REQDIPKGS; do
+    if [ ! "$(ipkg list_installed | sed -ne '/^'$PKG'/ s/^\([^ ]*\) - .*/\1/p')" == "$PKG" ]; then
+        echo "Missing ipkg package: $PKG"
+        VALID=0
+    fi
+done
+if [ "$VALID" == '0' ]; then
+    exit 2
+fi
+
+
 ### Verify CrashPlan is not running
-if [ -f /opt/crashplan/lib/com.backup42.desktop.jar ] && [ -x /etc/init.d/crashplan ] && [ -f /opt/crashplan/install.vars ]; then
+if [ -f /opt/crashplan/lib/com.backup42.desktop.jar ] && [ -x /etc/init.d/crashplan ] && [ -f /opt/crashplan/install.vars ] && [ -x /etc/init.d/crashplan ] && [ -x /opt/crashplan/bin/CrashPlanEngine ]; then
   echo 'Previous CrashPlan installation detected.  Checking state.'
   if [ "$(/etc/init.d/crashplan status)" != "CrashPlan Engine is stopped." ] && [ "$?" -eq "0" ]; then
     echo 'CrashPlan is not stopped.  Attempting to stop...'
     /etc/init.d/crashplan stop
-	echo 'Waiting 30s for CrashPlan to fully stop...'
-	sleep 30
-    if [ "$(/etc/init.d/crashplan status)" != "CrashPlan Engine is stopped." ] && [ "$?" -eq "0" ]; then
+    echo 'Waiting 30s for CrashPlan to fully stop...'
+    sleep 30
+    if [ "$(/etc/init.d/crashplan status)" != "CrashPlan Engine is stopped." ] && [ "$?" -eq "0" ] && [ -n "$(/bin/ps ww| grep 'app=CrashPlanService' | grep -v grep)" ]; then
       echo 'CrashPlan did not stop.  Cannot install atop a running instance.  Please stop CrashPlan first.'
       exit 3
     fi
@@ -106,6 +120,7 @@ fi
 echo 'Editing CrashPlan install.sh...'
 perl -pi -e 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/crashplan-install/install.sh || exit 5
 perl -pi -e 's/\$WGET_PATH \$JVMURL/\$WGET_PATH --no-check-certificate \$JVMURL/' /opt/crashplan-install/install.sh || exit 5
+perl -pi -e 's/(^|["'\'']|\s+)sed /\1\/opt\/bin\/sed /' /opt/crashplan-install/install.sh || exit 5
 
 echo 'Use these settings:'
 echo ''
@@ -194,16 +209,16 @@ netstat -anp | grep -qE ":$svcport |:$uiport "
 while [ $? -gt 0 ]; do
 healthcount=$((healthcount + 1))
 if [ $healthcount -gt $maxhealthchecks ]; then
-	echo 'Exceeded wait time for CrashPlan to start.  Check CrashPlan log files.'
-	break
+    echo 'Exceeded wait time for CrashPlan to start.  Check CrashPlan log files.'
+    break
 fi
 sleep 5
 netstat -anp | grep -qE ":$svcport |:$uiport "
 done
 if [ $? -eq 0 ]; then
-	echo 'CrashPlan has started successfully.'
-	netstat -anp | grep -E ":$svcport |:$uiport "
-	echo ''
+    echo 'CrashPlan has started successfully.'
+    netstat -anp | grep -E ":$svcport |:$uiport "
+    echo ''
 fi
 
 echo 'If all worked well, you should see java listening on 0.0.0.0:'$svcport 'and 0.0.0.0:'$uiport
