@@ -1,29 +1,34 @@
-syno-cpinstallsh 1.6 by Hossy
+syno-cpinstallsh 1.7 by Hossy
 =====================================
 
 A CrashPlan installer for Synology NAS.
 
-Verified on DSM version: DSM 5.2-5644 Update 5
+Verified on DSM version: DSM 6.1.1-15101 Update 1
 
 
 Prerequisites
 -------------
 - Synology NAS
 - Perl (install via Synology Package Center)
-- ipkg installed (<http://forum.synology.com/wiki/index.php/How_to_Install_Bootstrap>)
+- ipkg/optware
+	- URL I found with decent instructions: <http://www.vspecialist.co.uk/2014/09/how-to-install-ipkg-on-a-synology-nas/>
+	- URL before Synology took it down: <http://forum.synology.com/wiki/index.php/How_to_Install_Bootstrap>
 - ipkg packages:
 	- bash
-	- coreutils (`who` used by CrashPlan installer)
+	- coreutils
+		- `who` used by CrashPlan installer
+		- `basename` used by CrashPlan Health Check
 	- cpio (used by CrashPlan installer)
 	- screen
 	- sed (used by CrashPlan installer)
 	- wget-ssl (if you are downloading from CrashPlan's site)
 		- remove wget first
-- Optware fix from http://forum.synology.com/enu/viewtopic.php?f=77&t=51025
+- Optware fix from <http://forum.synology.com/enu/viewtopic.php?f=77&t=51025>
 
 
 Notes
 -----
+### /opt mount ###
 I have removed the /opt mount that the bootstrap install creates as it prevents the
 DSM from working properly: I have verified that upgrades and volume creation fail
 with the /opt mount.
@@ -34,12 +39,31 @@ To remove the /opt mount:
 2. rmdir /opt (this should be an empty directory)
 3. ln -s /volume1/@optware /opt
 
+### cpio - symbolic link ###
+At some point in DSM 6.x (maybe the first release), Synology updated the mv and cp
+binaries and now the -v option works.  The problem is that now the auto-upgrade
+scripts from CrashPlan now *partially* work and do enough to completely break the
+installation.  My fix for this is to add a symbolic link to /opt/bin/cpio at
+/bin/cpio.  This script will create this for you now, but I'm leaving this
+information in the README for now.  Here's the command to implement this manually,
+in case you need it:
+
+ln -s /opt/bin/cpio /bin/cpio
+
+### max\_user\_watches ###
+CrashPlan's instructions: <https://support.code42.com/CrashPlan/4/Troubleshooting/Linux_Real-Time_File_Watching_Errors>
+
+I believe that as of DSM 6.1, the method described on CrashPlan's site on
+increasing the max_user_watches became invalid.  This is because Synology uses
+their own configuration file for setting max_user_watches.  This script will edit
+/etc.defaults/synoinfo.conf and set the s2s_watches_max value to CrashPlan's
+recommended value of 1048576.
+
 
 Files
 -----
 
 ### fixoptware.sh ###
-
 After a DSM upgrade, the /opt softlink is lost as well as other customizations. 
 This script restores them.
 
@@ -50,7 +74,6 @@ Usage:
     ./fixoptware.sh
 
 ### optpath.sh ###
-
 When logging in as root, the modifications fixoptware.sh makes to /etc/profile to
 update PATH don't work.  I'm still working on figuring this out.  optpath.sh can
 be used to add /opt/bin:/opt/sbin to your PATH.
@@ -60,7 +83,6 @@ Usage:
     source optpath.sh
 
 ### SynoCrashPlanInstall.sh ###
-
 This script automates (as much as possible) of the CrashPlan install on subsequent
 modifications. Before running the install, the script provides you the path
 information to provide the CrashPlan install script.
@@ -74,7 +96,6 @@ Usage:
     ./SynoCrashPlanInstall.sh <CrashPlan-tgz-file>
 
 #### Java Heap Size ####
-
 For those of us who have very large backup sets, the default java heap size may not
 be enough to keep CrashPlan from crashing due to Out of Memory errors.  This is a
 known issue and this script will help you adjust your system, if you have the
@@ -100,6 +121,21 @@ Wiki has a good article on user-reported compatible RAM modules here:
 For more information on Out of Memory issues with CrashPlan, see
 <http://support.code42.com/CrashPlan/Latest/Troubleshooting/CrashPlan_Runs_Out_Of_Memory_And_Crashes>.
 
+### CrashPlanHealthCheck.sh ###
+This script has been quite a while in the making.  Like me, if you've had the
+problem where CrashPlan would sometimes terminate unexpectedly and you would find
+out with CrashPlan's 3-day or 5-day email, then you definitely want to set this up.
+You will need to create the Synology schedule task manually, however, as follows:
+
+**IMPORTANT**: You should copy this script to /opt
+
+1. Log into DSM, open the Control Panel, and then Task Scheduler.
+2. Create a task with the following attributes:
+	- User: root
+	- Schedule: Daily at 00:00, every 10 minutes, until 23:50 (whatever you want)
+	- User-defined script: /opt/CrashPlanHealthCheck.sh
+
+The script will log to CrashPlanHealthCheck.log when it restarts CrashPlan.
 
 Remote Management from Windows Client
 -------------------------------------
@@ -126,6 +162,12 @@ along with `syno-cpinstallsh`.  If not, see <http://www.gnu.org/licenses/>.
 
 Change Log
 ----------
+### v1.7 ###
+- Added handling for max_user_watches
+- Increased wait time for CrashPlan start-up
+- Added /bin/cpio symbolic link creation
+- Added CrashPlan Health Check script
+
 ### v1.6 ###
 - Added ipkg package validation
 - Added sed handling for CrashPlan installer

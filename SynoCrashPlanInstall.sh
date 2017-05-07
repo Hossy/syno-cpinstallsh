@@ -3,13 +3,14 @@
 #Java memory heap override
 #Reference: http://support.code42.com/CrashPlan/Latest/Troubleshooting/CrashPlan_Runs_Out_Of_Memory_And_Crashes
 #javaheap=4096
+max_user_watches=1048576
 
 ###################################################################################
 #########################   DO NOT EDIT BELOW THIS LINE   #########################
 ###################################################################################
 
 ### Constants
-maxhealthchecks=6
+maxhealthchecks=12
 
 ### Validate javaheap variable
 javaheapre='^[0-9]+$'
@@ -72,6 +73,44 @@ if [ -n "$(/bin/ps ww| grep 'app=CrashPlanService' | grep -v grep)" ]; then
   exit 3
 fi
 
+## #Check max_user_watches (no changes will be made)
+## #https://support.code42.com/CrashPlan/4/Troubleshooting/Linux_Real-Time_File_Watching_Errors
+## if [ -r /proc/sys/fs/inotify/max_user_watches ]; then
+##   cur_max_user_watches=`cat /proc/sys/fs/inotify/max_user_watches`
+##   if [ "$cur_max_user_watches" != "$max_user_watches" ]; then
+##     echo "max_user_watches is currently set to $cur_max_user_watches."
+##     echo "You might consider increasing this to $max_user_watches"
+##     echo 'See: https://support.code42.com/CrashPlan/4/Troubleshooting/Linux_Real-Time_File_Watching_Errors'
+##     sleep 5
+##   fi
+## fi
+
+#Check max_user_watches
+#https://support.code42.com/CrashPlan/4/Troubleshooting/Linux_Real-Time_File_Watching_Errors
+#See README.  Synology does it differently.
+if [ -r /proc/sys/fs/inotify/max_user_watches ]; then
+  cur_max_user_watches=`cat /proc/sys/fs/inotify/max_user_watches`
+  if [[ "$cur_max_user_watches" =~ ^[0-9]+$ ]]; then
+    if [ "$cur_max_user_watches" -lt "$max_user_watches" ]; then
+      echo "Increasing max_user_watches from $cur_max_user_watches to $max_user_watches..."
+      echo 'See: https://support.code42.com/CrashPlan/4/Troubleshooting/Linux_Real-Time_File_Watching_Errors'
+      echo "$max_user_watches" > /proc/sys/fs/inotify/max_user_watches
+      if [ -n "$(cat /etc.defaults/synoinfo.conf | grep 's2s_watches_max')" ]; then
+        #s2s_watches_max is already defined. Edit it
+        perl -pi.bak -e "s/^(s2s_watches_max=\"?)[0-9]+(\"?.*?)$/\${1}${max_user_watches}\${2}/" /etc.defaults/synoinfo.conf || exit 4
+      else
+        #Define s2s_watches_max
+        cp /etc.defaults/synoinfo.conf{,.bak}
+        (cat >> /etc.defaults/synoinfo.conf || exit 4) <<EOL
+
+# for CrashPlan
+s2s_watches_max="1048576"
+EOL
+      fi
+    fi
+  fi
+fi
+
 ### Clean up from previous installation
 if [ -d /opt/crashplan/upgrade ]; then
   echo "Removing previous version's upgrade files..."
@@ -109,18 +148,18 @@ tar -xvf $1 -C /opt
 
 if [ ! -x /opt/crashplan-install/install.sh ]; then
   echo 'Failed to extract CrashPlan install files.'
-  exit 4
+  exit 5
 fi
 
 if [ -f /opt/crashplan/install.vars ]; then
   echo 'Setting up for reinstall...'
-  rm /opt/crashplan/install.vars || exit 4
+  rm /opt/crashplan/install.vars || exit 5
 fi
 
 echo 'Editing CrashPlan install.sh...'
-perl -pi -e 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/crashplan-install/install.sh || exit 5
-perl -pi -e 's/\$WGET_PATH \$JVMURL/\$WGET_PATH --no-check-certificate \$JVMURL/' /opt/crashplan-install/install.sh || exit 5
-perl -pi -e 's/(^|["'\'']|\s+)sed /\1\/opt\/bin\/sed /' /opt/crashplan-install/install.sh || exit 5
+perl -pi -e 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/crashplan-install/install.sh || exit 6
+perl -pi -e 's/\$WGET_PATH \$JVMURL/\$WGET_PATH --no-check-certificate \$JVMURL/' /opt/crashplan-install/install.sh || exit 6
+perl -pi -e 's/(^|["'\'']|\s+)sed /\1\/opt\/bin\/sed /' /opt/crashplan-install/install.sh || exit 6
 
 echo 'Use these settings:'
 echo ''
@@ -137,7 +176,7 @@ cd /opt/crashplan-install
 
 if [ "$?" -ne "0" ]; then
   echo 'CrashPlan installation failed.  Cannot continue.'
-  exit 6
+  exit 7
 fi
 
 
@@ -145,13 +184,13 @@ fi
 echo 'Editing files...'
 
 #Edit /etc/init.d/crashplan
-#mv /usr/syno/etc/rc.d/S99crashplan /usr/syno/etc/rc.d/S99crashplan.sh || exit 7
-perl -pi.bak -e 's/SCRIPTNAME=(?!env\\ PATH=\/opt\/bin:\/opt\/sbin:\${PATH}\\ )/SCRIPTNAME=env\\ PATH=\/opt\/bin:\/opt\/sbin:\${PATH}\\ /' /etc/init.d/crashplan || exit 7
+#mv /usr/syno/etc/rc.d/S99crashplan /usr/syno/etc/rc.d/S99crashplan.sh || exit 8
+perl -pi.bak -e 's/SCRIPTNAME=(?!env\\ PATH=\/opt\/bin:\/opt\/sbin:\${PATH}\\ )/SCRIPTNAME=env\\ PATH=\/opt\/bin:\/opt\/sbin:\${PATH}\\ /' /etc/init.d/crashplan || exit 8
 
 #Edit /opt/crashplan/bin/CrashPlanEngine
-perl -pi.bak -e 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/crashplan/bin/CrashPlanEngine || exit 7
-perl -pi -e "s/ps (?:-eo 'pid,cmd'|-p)( ?)/ps ww\1/" /opt/crashplan/bin/CrashPlanEngine || exit 7
-perl -pi -e 's/(\s*)nice /\1\/opt\/bin\/nice /' /opt/crashplan/bin/CrashPlanEngine || exit 7
+perl -pi.bak -e 's/#!\/bin\/bash/#!\/opt\/bin\/bash/' /opt/crashplan/bin/CrashPlanEngine || exit 8
+perl -pi -e "s/ps (?:-eo 'pid,cmd'|-p)( ?)/ps ww\1/" /opt/crashplan/bin/CrashPlanEngine || exit 8
+perl -pi -e 's/(\s*)nice /\1\/opt\/bin\/nice /' /opt/crashplan/bin/CrashPlanEngine || exit 8
 
 #Edit for open file count
 sed -i 'N;N;/#############################################################\n/a\
@@ -163,7 +202,7 @@ ulimit -n 131072\
 #Recheck $javaheap in case someone edited a line they weren't supposed to :)
 if [ -n "$javaheap" ] && [[ $javaheap =~ $javaheapre ]]; then
   echo "Setting java heap size to ${javaheap}m..."
-  perl -pi -e "s/(^SRV_JAVA_OPTS.*) -Xmx\d+m /\1 -Xmx${javaheap}m /g" /opt/crashplan/bin/run.conf || exit 8
+  perl -pi -e "s/(^SRV_JAVA_OPTS.*) -Xmx\d+m /\1 -Xmx${javaheap}m /g" /opt/crashplan/bin/run.conf || exit 9
 fi
 
 
@@ -185,7 +224,12 @@ echo 'Stopping CrashPlan...'
 /opt/etc/init.d/S99crashplan stop
 
 echo 'Reconfiguring CrashPlan for remote management...'
-perl -pi -e 's/<serviceHost>(?:127\.0\.0\.1|localhost)<\/serviceHost>/<serviceHost>0.0.0.0<\/serviceHost>/' /opt/crashplan/conf/my.service.xml || exit 9
+perl -pi -e 's/<serviceHost>(?:127\.0\.0\.1|localhost)<\/serviceHost>/<serviceHost>0.0.0.0<\/serviceHost>/' /opt/crashplan/conf/my.service.xml || exit 10
+
+
+### Setup synlink for cpio because upgrade.sh is stupid
+echo 'Creating symlink to cpio for future upgrades...'
+ln -s /opt/bin/cpio /bin/cpio
 
 
 ### Start CrashPlan
