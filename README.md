@@ -63,6 +63,22 @@ recommended value of 1048576.
 Files
 -----
 
+### CrashPlanHealthCheck.sh ###
+This script has been quite a while in the making.  Like me, if you've had the
+problem where CrashPlan would sometimes terminate unexpectedly and you would find
+out with CrashPlan's 3-day or 5-day email, then you definitely want to set this up.
+You will need to create the Synology schedule task manually, however, as follows:
+
+**IMPORTANT**: You should copy this script to /opt
+
+1. Log into DSM, open the Control Panel, and then Task Scheduler.
+2. Create a task with the following attributes:
+	- User: root
+	- Schedule: Daily at 00:00, every 10 minutes, until 23:50 (whatever you want)
+	- User-defined script: /opt/CrashPlanHealthCheck.sh
+
+The script will log to CrashPlanHealthCheck.log when it restarts CrashPlan.
+
 ### fixoptware.sh ###
 After a DSM upgrade, the /opt softlink is lost as well as other customizations. 
 This script restores them.
@@ -121,21 +137,6 @@ Wiki has a good article on user-reported compatible RAM modules here:
 For more information on Out of Memory issues with CrashPlan, see
 <http://support.code42.com/CrashPlan/Latest/Troubleshooting/CrashPlan_Runs_Out_Of_Memory_And_Crashes>.
 
-### CrashPlanHealthCheck.sh ###
-This script has been quite a while in the making.  Like me, if you've had the
-problem where CrashPlan would sometimes terminate unexpectedly and you would find
-out with CrashPlan's 3-day or 5-day email, then you definitely want to set this up.
-You will need to create the Synology schedule task manually, however, as follows:
-
-**IMPORTANT**: You should copy this script to /opt
-
-1. Log into DSM, open the Control Panel, and then Task Scheduler.
-2. Create a task with the following attributes:
-	- User: root
-	- Schedule: Daily at 00:00, every 10 minutes, until 23:50 (whatever you want)
-	- User-defined script: /opt/CrashPlanHealthCheck.sh
-
-The script will log to CrashPlanHealthCheck.log when it restarts CrashPlan.
 
 Remote Management from Windows Client
 -------------------------------------
